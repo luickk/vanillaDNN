@@ -67,10 +67,10 @@ RM = /usr/local/Cellar/cmake/3.18.4/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/luickklippel/Documents/projekte/simpleCNN
+CMAKE_SOURCE_DIR = /Users/luickklippel/Documents/Projekte/simpleCNN
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/luickklippel/Documents/projekte/simpleCNN/build
+CMAKE_BINARY_DIR = /Users/luickklippel/Documents/Projekte/simpleCNN/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -99,9 +99,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luickklippel/Documents/projekte/simpleCNN/build/CMakeFiles /Users/luickklippel/Documents/projekte/simpleCNN/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luickklippel/Documents/Projekte/simpleCNN/build/CMakeFiles /Users/luickklippel/Documents/Projekte/simpleCNN/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luickklippel/Documents/projekte/simpleCNN/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luickklippel/Documents/Projekte/simpleCNN/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -130,44 +130,44 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named simpleCNN
+# Target rules for targets named simpleNN
 
 # Build rule for target.
-simpleCNN: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 simpleCNN
-.PHONY : simpleCNN
+simpleNN: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 simpleNN
+.PHONY : simpleNN
 
 # fast build rule for target.
-simpleCNN/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleCNN.dir/build.make CMakeFiles/simpleCNN.dir/build
-.PHONY : simpleCNN/fast
+simpleNN/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/build
+.PHONY : simpleNN/fast
 
-cnn.o: cnn.cpp.o
+dnn.o: dnn.cpp.o
 
-.PHONY : cnn.o
+.PHONY : dnn.o
 
 # target to build an object file
-cnn.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleCNN.dir/build.make CMakeFiles/simpleCNN.dir/cnn.cpp.o
-.PHONY : cnn.cpp.o
+dnn.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.o
+.PHONY : dnn.cpp.o
 
-cnn.i: cnn.cpp.i
+dnn.i: dnn.cpp.i
 
-.PHONY : cnn.i
+.PHONY : dnn.i
 
 # target to preprocess a source file
-cnn.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleCNN.dir/build.make CMakeFiles/simpleCNN.dir/cnn.cpp.i
-.PHONY : cnn.cpp.i
+dnn.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.i
+.PHONY : dnn.cpp.i
 
-cnn.s: cnn.cpp.s
+dnn.s: dnn.cpp.s
 
-.PHONY : cnn.s
+.PHONY : dnn.s
 
 # target to generate assembly for a file
-cnn.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleCNN.dir/build.make CMakeFiles/simpleCNN.dir/cnn.cpp.s
-.PHONY : cnn.cpp.s
+dnn.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.s
+.PHONY : dnn.cpp.s
 
 # Help Target
 help:
@@ -177,10 +177,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... simpleCNN"
-	@echo "... cnn.o"
-	@echo "... cnn.i"
-	@echo "... cnn.s"
+	@echo "... simpleNN"
+	@echo "... dnn.o"
+	@echo "... dnn.i"
+	@echo "... dnn.s"
 .PHONY : help
 
 

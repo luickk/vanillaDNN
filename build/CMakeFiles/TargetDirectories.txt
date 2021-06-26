@@ -1,3 +1,3 @@
-/Users/luickklippel/Documents/projekte/simpleCNN/build/CMakeFiles/rebuild_cache.dir
-/Users/luickklippel/Documents/projekte/simpleCNN/build/CMakeFiles/edit_cache.dir
-/Users/luickklippel/Documents/projekte/simpleCNN/build/CMakeFiles/simpleCNN.dir
+/Users/luickklippel/Documents/Projekte/simpleCNN/build/CMakeFiles/rebuild_cache.dir
+/Users/luickklippel/Documents/Projekte/simpleCNN/build/CMakeFiles/edit_cache.dir
+/Users/luickklippel/Documents/Projekte/simpleCNN/build/CMakeFiles/simpleNN.dir

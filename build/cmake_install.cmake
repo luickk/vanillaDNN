@@ -1,4 +1,4 @@
-# Install script for directory: /Users/luickklippel/Documents/projekte/simpleCNN
+# Install script for directory: /Users/luickklippel/Documents/Projekte/simpleCNN
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/luickklippel/Documents/projekte/simpleCNN/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/luickklippel/Documents/Projekte/simpleCNN/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
