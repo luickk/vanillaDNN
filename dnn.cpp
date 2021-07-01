@@ -56,9 +56,18 @@ void testActFunc(float inp, float out){
     out = 1;
   }
 }
+void dotProduct(int nElemtsFVec, int nElemSVec, float *fVec, float *sVec, float *outpVec) {
+  for (int i = 0; i<nElements; i++) {
+    outpVec[i] = fVec[i] * sVec[i];
+  }
+}
 
 void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
-
+  for(int i = 0; i<layer.size; i++) {
+    for (int j = 0; j<lastLayer.size; j++) {
+      layer.nodes[i] += layer.weights[i] * lastLayer.nodes[j];
+    }
+  }
 }
 
 void feedForward(neuralNet *net, float input[4], int nPredict){
@@ -71,8 +80,6 @@ void feedForward(neuralNet *net, float input[4], int nPredict){
     calcNodeValForLayer(net->nnLayer[i-1], net->nnLayer[i]);
   }
 }
-
-
 
 /*
 util functions
@@ -107,7 +114,6 @@ int trainDNN(int nPredict, neuralNet *net, char pathToFile[]) {
   }
   return 0;
 }
-
 
 int main(){
   int nPredict = 5;
