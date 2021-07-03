@@ -41,8 +41,34 @@ baseLayer *createLayer(float size, layerType type, activationFunc actFunc) {
   return &layer;
 }
 
+void initWeights(baseLayer *layer, int size){
+  int randW = 0;
+  for (int i = 0; i < size; i++) {
+    randW = (rand() % (10 - 0 + 1)) + 0;
+    layer->weights[i] = randW;
+  }
+}
+
+void initBias(baseLayer *layer, int size){
+  int randB = 0;
+  for (int i = 0; i < size; i++) {
+    randB = (rand() % (2 - 0 + 1)) + 0;
+    layer->bias[i] = randB;
+  }
+}
+
 neuralNet *createNet(baseLayer *layer[], int nLayer) {
-  neuralNet *nn = (neuralNet *)malloc(sizeof(*layer)+sizeof(nLayer));
+  neuralNet *nn = (neuralNet *)malloc(sizeof(baseLayer)*nLayer+sizeof(nLayer));
+  for (int i=0; i<nLayer; ++i) {
+     nn->nnLayer[i]=layer[i];
+  }
+  nn->nLayer = nLayer;
+
+  for (int i=0; i<nLayer; ++i) {
+    initWeights(nn->nnLayer[i],nn->nnLayer[i]->size);
+    initBias(nn->nnLayer[i],nn->nnLayer[i]->size);
+  }
+
   return nn;
 }
 
@@ -56,16 +82,12 @@ void testActFunc(float inp, float out){
     out = 1;
   }
 }
-void dotProduct(int nElemtsFVec, int nElemSVec, float *fVec, float *sVec, float *outpVec) {
-  for (int i = 0; i<nElements; i++) {
-    outpVec[i] = fVec[i] * sVec[i];
-  }
-}
 
 void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
-  for(int i = 0; i<layer.size; i++) {
-    for (int j = 0; j<lastLayer.size; j++) {
-      layer.nodes[i] += layer.weights[i] * lastLayer.nodes[j];
+  for(int i = 0; i<layer->size; i++) {
+    for (int j = 0; j<lastLayer->size; j++) {
+      layer->nodes[i] += layer->weights[i] * lastLayer->nodes[j];
+      printf("%i, %i: %.2f \n", i, j, layer->nodes[i]);
     }
   }
 }
@@ -99,11 +121,12 @@ int trainDNN(int nPredict, neuralNet *net, char pathToFile[]) {
   while ((read = getline(&line, &len, fp)) != -1) {
     if (inpIt == nPredict) {
       // printf("\n ");
-      for(int j = 0; j < nPredict; j++) {
+      // for(int j = 0; j < nPredict; j++) {
         // printf("%f ", inp[j]);
-        feedForward(net, inp, nPredict);
-      }
+      // }
+      feedForward(net, inp, nPredict);
       inpIt = 0;
+      break;
     }
     inp[inpIt] = atof(line);
     inpIt++;
@@ -116,7 +139,7 @@ int trainDNN(int nPredict, neuralNet *net, char pathToFile[]) {
 }
 
 int main(){
-  int nPredict = 5;
+  int nPredict = 4;
 
   printf("nPredict: %d \n", nPredict);
 
@@ -133,5 +156,8 @@ int main(){
   if (rc != 0) {
      printf("file open failed");
      return 0;
+  }
+  for (int i = 0; i < nPredict; i++) {
+    printf("res: %.4f \n", outpLayer->nodes[i]);
   }
 }
