@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef void (*activationFunc)(float inp, float out);
+typedef void (*activationFunc)(float *inp, float *out);
 
 enum layerType {
     fullyConnected,
@@ -75,20 +75,31 @@ neuralNet *createNet(baseLayer *layer[], int nLayer) {
 /*
 Layer Operations
 */
-void testActFunc(float inp, float out){
-  if (inp < 1) {
-    out = 0;
-  } else if (inp >=1) {
-    out = 1;
-  }
+
+// fast Sigmoid
+// from https://stackoverflow.com/a/10733861
+void sigmoidActFunc(float *x, float *y){
+   *y = *x / (1 + abs(*x));
 }
+
+void reLUActFunc(float *x, float *y)
+{
+  *y = fmax(0, *x);
+}
+void noActFunc(float *x, float *y)
+{
+  *y = *x;
+}
+
 
 void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
   for(int i = 0; i<layer->size; i++) {
     for (int j = 0; j<lastLayer->size; j++) {
       layer->nodes[i] += layer->weights[i] * lastLayer->nodes[j];
-      printf("%i, %i: %.2f \n", i, j, layer->nodes[i]);
+      printf("Neuron: %i, last layer neuron: %i: %.0f \n", i, j, layer->nodes[i]);
     }
+    layer->nodes[i] += layer->bias[i];
+    layer->actFunc(&layer->nodes[i], &layer->nodes[i]);
   }
 }
 
@@ -106,7 +117,7 @@ void feedForward(neuralNet *net, float input[4], int nPredict){
 /*
 util functions
 */
-int trainDNN(int nPredict, neuralNet *net, char pathToFile[]) {
+int trainDNN(int nPredict, neuralNet *net, const char pathToFile[]) {
   FILE *fp;
   char *line = 0;
   float inp[4] = {0};
@@ -143,21 +154,19 @@ int main(){
 
   printf("nPredict: %d \n", nPredict);
 
-  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, testActFunc);
-  baseLayer *hiddenLayer2 = createLayer(100, fullyConnected, testActFunc);
-  baseLayer *hiddenLayer1 = createLayer(100, fullyConnected, testActFunc);
-  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, testActFunc);
+  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, reLUActFunc);
+  baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, reLUActFunc);
+  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, noActFunc);
 
-  baseLayer *layer[] = {inpLayer, hiddenLayer1, hiddenLayer2, outpLayer};
-  neuralNet *dnn = createNet(layer, 4);
+  baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
+  neuralNet *dnn = createNet(layer, 3);
 
-  // dnn = {4, layer};
   int rc = trainDNN(nPredict, dnn, "../data/datasetByLine.csv");
   if (rc != 0) {
      printf("file open failed");
      return 0;
   }
   for (int i = 0; i < nPredict; i++) {
-    printf("res: %.4f \n", outpLayer->nodes[i]);
+    printf("Last layer neuron num %i: %.2f \n", i, outpLayer->nodes[i]);
   }
 }
