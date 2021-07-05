@@ -82,15 +82,32 @@ void sigmoidActFunc(float *x, float *y){
    *y = *x / (1 + abs(*x));
 }
 
-void reLUActFunc(float *x, float *y)
+void reluActFunc(float *x, float *y)
 {
   *y = fmax(0, *x);
+}
+void reluDerivativeActFunc(float *x, float *y)
+{
+  if (*x > 0) {
+    *y = 1;
+  } else if (*x <= 0){
+    *y = 0;
+  }
 }
 void noActFunc(float *x, float *y)
 {
   *y = *x;
 }
 
+
+// outputs Delta as sensitives to output layer
+void calcOutpWeight(neuralNet *net, int nPredict){
+  float y = 0;
+  for (int i = 0; i < nPredict; i++) {
+    reluDerivativeActFunc(&net->nnLayer[net->nLayer]->nodes[i], &y);
+    net->nnLayer[net->nLayer]->weights[i] =  net->nnLayer[net->nLayer]->nodes[i] * (y * (net->nnLayer[0]->nodes[i] - net->nnLayer[net->nLayer]->nodes[i]));
+  }
+}
 
 void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
   for(int i = 0; i<layer->size; i++) {
@@ -100,6 +117,14 @@ void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
     }
     layer->nodes[i] += layer->bias[i];
     layer->actFunc(&layer->nodes[i], &layer->nodes[i]);
+  }
+}
+
+void backpropagate(neuralNet *net, float input[4], int nPredict) {
+  calcOutpWeight(net, nPredict);
+
+  for(int i = net->nLayer-1; i > net->nLayer; i--) {
+    // net->nnLayer[i]->weights = net->nnLayer[i+]->weights*net->nnLayer[i+].weights*
   }
 }
 
@@ -154,8 +179,8 @@ int main(){
 
   printf("nPredict: %d \n", nPredict);
 
-  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, reLUActFunc);
-  baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, reLUActFunc);
+  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, reluActFunc);
+  baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, reluActFunc);
   baseLayer *outpLayer = createLayer(nPredict, fullyConnected, noActFunc);
 
   baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
