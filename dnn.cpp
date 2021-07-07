@@ -101,11 +101,16 @@ void noActFunc(float *x, float *y)
 
 
 // outputs Delta as sensitives to output layer
-void calcOutpWeight(neuralNet *net, int nPredict){
+void calcOutpLayerWeights(neuralNet *net, int nPredict){
   float y = 0;
   for (int i = 0; i < nPredict; i++) {
-    reluDerivativeActFunc(&net->nnLayer[net->nLayer]->nodes[i], &y);
-    net->nnLayer[net->nLayer]->weights[i] =  net->nnLayer[net->nLayer]->nodes[i] * (y * (net->nnLayer[0]->nodes[i] - net->nnLayer[net->nLayer]->nodes[i]));
+    reluDerivativeActFunc(&net->nnLayer[net->nLayer-1]->nodes[i], &y);
+    printf("1: %f \n", (net->nnLayer[0]->nodes[i]));
+    printf("2: %f \n", (net->nnLayer[net->nLayer-1]->nodes[i]));
+    printf("3: %f \n", (net->nnLayer[0]->nodes[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
+    // weight adjustment                               - weights                    - sensitives
+    net->nnLayer[net->nLayer-1]->weights[i] =  net->nnLayer[net->nLayer-1]->nodes[i] * (y * (net->nnLayer[0]->nodes[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
+    printf("bp - Last Layer neuron: %i, weight: %.0f \n", i, net->nnLayer[net->nLayer-1]->weights[i]);
   }
 }
 
@@ -113,7 +118,7 @@ void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
   for(int i = 0; i<layer->size; i++) {
     for (int j = 0; j<lastLayer->size; j++) {
       layer->nodes[i] += layer->weights[i] * lastLayer->nodes[j];
-      printf("Neuron: %i, last layer neuron: %i: %.0f \n", i, j, layer->nodes[i]);
+      printf("ff - Layer: %i, neuron: %i, node: %.0f \n", i, j, layer->nodes[i]);
     }
     layer->nodes[i] += layer->bias[i];
     layer->actFunc(&layer->nodes[i], &layer->nodes[i]);
@@ -121,10 +126,17 @@ void calcNodeValForLayer(baseLayer *lastLayer, baseLayer *layer) {
 }
 
 void backpropagate(neuralNet *net, float input[4], int nPredict) {
-  calcOutpWeight(net, nPredict);
+  calcOutpLayerWeights(net, nPredict);
 
-  for(int i = net->nLayer-1; i > net->nLayer; i--) {
-    // net->nnLayer[i]->weights = net->nnLayer[i+]->weights*net->nnLayer[i+].weights*
+  float neuronInputY = 0;
+  float neuronInputX = 0;
+  for(int i = net->nLayer-1; i == 0; i--) {
+    for (int j = 0; j<net->nnLayer[i]->size; j++) {
+      neuronInputX = (net->nnLayer[i]->weights[j] * net->nnLayer[i]->nodes[j])+net->nnLayer[i]->bias[j];
+      reluDerivativeActFunc(&neuronInputX, &neuronInputY);
+      net->nnLayer[i]->weights[j] = neuronInputY * net->nnLayer[i]->weights[j];
+      printf("bp - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
+    }
   }
 }
 
@@ -161,6 +173,7 @@ int trainDNN(int nPredict, neuralNet *net, const char pathToFile[]) {
         // printf("%f ", inp[j]);
       // }
       feedForward(net, inp, nPredict);
+      backpropagate(net, inp, nPredict);
       inpIt = 0;
       break;
     }
@@ -192,6 +205,6 @@ int main(){
      return 0;
   }
   for (int i = 0; i < nPredict; i++) {
-    printf("Last layer neuron num %i: %.2f \n", i, outpLayer->nodes[i]);
+    printf("Last layer neuron %i, node: %.2f \n", i, outpLayer->nodes[i]);
   }
 }
