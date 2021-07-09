@@ -12,6 +12,7 @@ typedef struct {
   float *bias;
   float *weights;
   float *nodes;
+  float *sensitives;
   activationFunc actFunc;
   int size;
   layerType type;
@@ -29,6 +30,7 @@ void initLayer(float size, layerType type, baseLayer &layer, activationFunc actF
   layer.bias = (float*)malloc(size * sizeof(float));
   layer.weights = (float*)malloc(size * sizeof(float));
   layer.nodes = (float*)malloc(size * sizeof(float));
+  layer.sensitives = (float*)malloc(size * sizeof(float));
 
   layer.actFunc = actFunc;
   layer.size = size;
@@ -44,7 +46,7 @@ baseLayer *createLayer(float size, layerType type, activationFunc actFunc) {
 void initWeights(baseLayer *layer, int size){
   int randW = 0;
   for (int i = 0; i < size; i++) {
-    randW = (rand() % (100 - 0 + 0)) + 0;
+    randW = (rand() % (150 - 0 + 0)) + 0;
     layer->weights[i] = randW/100;
   }
 }
@@ -102,26 +104,28 @@ void noActFunc(float *x, float *y)
 void backpropagate(neuralNet *net, float input[4], int nPredict) {
   float y = 0;
   // iterating over every neuron in output layer
-  // calculating output (-> backprop init weights) weights
-  float error = 0;
-  for (int i = 0; i < nPredict; i++) {
-    reluDerivativeActFunc(&net->nnLayer[net->nLayer-1]->nodes[i], &y);
-    // printf("1: %f \n", (input[i]));
-    // printf("2: %f \n", (net->nnLayer[net->nLayer-1]->nodes[i]));
-    // weight adjustment                               - weights                    - sensitives
-    net->nnLayer[net->nLayer-1]->weights[i] =  net->nnLayer[net->nLayer-1]->nodes[i] * (y * (input[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
-    // printf("bp - Last Layer neuron: %i, weight: %.0f \n", i, net->nnLayer[net->nLayer-1]->weights[i]);
-    error += 0.5*sqrt(abs(input[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
-  }
-  printf("error: %f \n", error);
+  // calculating output (-> backprop init weights) weight
 
-  float neuronInputY = 0;
-  float neuronInputX = 0;
+  // net->nLayer-1 = 0..nLastLayer
+  baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
+
+  for (int i = 0; i < nPredict; i++) {
+    reluDerivativeActFunc(&lastLayer->nodes[i], &y);
+    lastLayer->sensitives[i] = (y * (input[i] - lastLayer->nodes[i]));
+    lastLayer->weights[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
+    // printf("bp - Last Layer neuron: %i, weight: %.0f \n", i, lastLayer->weights[i]);
+  }
+
+  float neuronInputY, neuronInputX = 0;
   for(int i = net->nLayer-2; i == 0; i--) {
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
-      neuronInputX = (net->nnLayer[i]->weights[j] * net->nnLayer[i]->nodes[j])+net->nnLayer[i]->bias[j];
+
+      neuronInputX = (net->nnLayer[i]->weights[j] * net->nnLayer[i]->nodes[j+1])+net->nnLayer[i]->bias[j];
       reluDerivativeActFunc(&neuronInputX, &neuronInputY);
-      net->nnLayer[i]->weights[j] = neuronInputY * net->nnLayer[i]->weights[j];
+      net->nnLayer[i]->sensitives[j] = neuronInputY * net->nnLayer[i]->weights[j+1]*net->nnLayer[i]->sensitives[j+1];
+
+      net->nnLayer[i]->weights[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i]->nodes[i+1];
+
       // printf("bp - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
     }
   }
@@ -163,11 +167,18 @@ int trainDNN(int nPredict, neuralNet *net, const char pathToFile[], int iteratio
   if (fp == 0) {
    return 1;
   }
+  float error = 0;
   for (int i = 0; i < iterations; i++) {
     while ((read = getline(&line, &len, fp)) != -1) {
       if (inpIt == nPredict) {
         feedForward(net, inp, nPredict);
         backpropagate(net, inp, nPredict);
+        error = 0;
+        for (int i = 0; i < nPredict; i++) {
+          error += 0.5*sqrt(abs(inp[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
+        }
+        printf("error: %f \n", error);
+
         inpIt = 0;
       }
       inp[inpIt] = atof(line);
@@ -199,6 +210,6 @@ int main(){
      return 0;
   }
   for (int i = 0; i < nPredict; i++) {
-    printf("Last layer neuron %i, node: %.2f \n", i, outpLayer->nodes[i]);
+    printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer->nodes[i]);
   }
 }
