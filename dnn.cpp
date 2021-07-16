@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// #define DEBUG 1
+
 typedef void (*activationFunc)(float *inp, float *out);
 
 enum layerType {
@@ -46,16 +48,23 @@ baseLayer *createLayer(float size, layerType type, activationFunc actFunc) {
 void setRandWeights(baseLayer *layer, int size){
   int randW = 0;
   for (int i = 0; i < size; i++) {
-    randW = (rand() % (1 - 0 + 0)) + 0;
-    layer->weights[i] = randW/100;
+    randW = (rand() % (10 - 0 + 0)) + 0;
+    layer->weights[i] = randW;
+  }
+}
+void setRandNodes(baseLayer *layer, int size){
+  int randN = 0;
+  for (int i = 0; i < size; i++) {
+    randN = (rand() % (10 - 0 + 0)) + 0;
+    layer->nodes[i] = randN;
   }
 }
 
 void setRandBias(baseLayer *layer, int size){
   int randB = 0;
   for (int i = 0; i < size; i++) {
-    randB = (rand() % (1 - 0 + 0)) + 0;
-    layer->bias[i] = randB/100;
+    randB = (rand() % (10 - 0 + 0)) + 0;
+    layer->bias[i] = randB;
   }
 }
 
@@ -68,6 +77,7 @@ neuralNet *createNet(baseLayer *layer[], int nLayer) {
 
   for (int i=0; i<nLayer; ++i) {
     setRandWeights(nn->nnLayer[i],nn->nnLayer[i]->size);
+    setRandNodes(nn->nnLayer[i],nn->nnLayer[i]->size);
     setRandBias(nn->nnLayer[i],nn->nnLayer[i]->size);
   }
 
@@ -109,7 +119,7 @@ void backpropagate(neuralNet *net, float *input) {
   // net->nLayer-1 = 0..nLastLayer
   baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
 
-  for (int i = 0; i < net->nnLayer[net->nLayer-1]->size; i++) {
+  for (int i = 0; i < lastLayer->size; i++) {
     reluDerivativeActFunc(&lastLayer->nodes[i], &y);
     lastLayer->sensitives[i] = (y * (input[i] - lastLayer->nodes[i]));
     lastLayer->weights[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
@@ -173,46 +183,63 @@ void lsErrorCalc(neuralNet *net, float *input, float *error) {
 /*
 util functions
 */
-int trainDNN(int nPredict, neuralNet *net, const char pathToFile[], int iterations) {
+int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iterations) {
   FILE *fp;
   char *line = 0;
   int inpIt = 0;
+  int nLines = 0;
   size_t len = 0;
   ssize_t read;
 
   float *inp = (float*)malloc(nPredict*sizeof(float));
   float error = 0;
-
-  fp = fopen(pathToFile, "r");
-  if (fp == 0) {
-   return 1;
-  }
+  float meanErr = 0;
   for (int i = 0; i < iterations; i++) {
+    fp = fopen(pathToFile, "r");
+    if (fp == 0) {
+     return 1;
+    }
     while ((read = getline(&line, &len, fp)) != -1) {
       if (inpIt == nPredict) {
 
-        feedForward(net, inp);
+        // feedForward(net, inp);
         backpropagate(net, inp);
         lsErrorCalc(net, inp, &error);
-        printf("%.0f,", error);
+        // printf("%.0f,", error);
+        meanErr += error;
+        nLines++;
 
         inpIt = 0;
       }
       inp[inpIt] = atof(line);
       inpIt++;
     }
+    meanErr = meanErr/nLines;
+    printf("meanErr: %f \n ", meanErr);
+    nLines = 0;
+    meanErr = 0;
+
+    fclose(fp);
   }
-  printf("\n");
-  fclose(fp);
   if (line) {
    free(line);
   }
   return 0;
 }
 
+int predictDNN(neuralNet *net, float *predictionSeq) {
+  feedForward(net, predictionSeq);
+  baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
+
+  for (int i = 0; i < lastLayer->size; i++) {
+    printf("Prediction %i, node val: %f \n", i, lastLayer->nodes[i]);
+  }
+  return 0;
+}
+
 int main(){
-  int nPredict = 20;
-  int iterations = 1;
+  int nPredict = 4;
+  int iterations = 100;
   #ifdef DEBUG
     printf("nPredict: %d \n", nPredict);
   #endif
@@ -225,12 +252,12 @@ int main(){
   baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
   neuralNet *dnn = createNet(layer, 3);
 
-  int rc = trainDNN(nPredict, dnn, "../data/datasetByLine.csv", iterations);
-  if (rc != 0) {
-     printf("file open failed");
-     return 0;
-  }
+  int rc = trainDNN(dnn, nPredict, "../data/datasetByLine.csv", iterations);
+
   for (int i = 0; i < nPredict; i++) {
     printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer->nodes[i]);
   }
+
+  float predSeq[] = {15.0, 15.9, 15.5, 15.8};
+  predictDNN(dnn, predSeq);
 }
