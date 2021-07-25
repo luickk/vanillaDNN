@@ -56,7 +56,7 @@ void setRandNodes(baseLayer *layer, int size){
   float randN = 0;
   for (int i = 0; i < size; i++) {
     randN = rand() % 10 + 1;
-    printf("%f \n", randN);
+    // printf("%f \n", randN);
     layer->nodes[i] = randN;
   }
 }
@@ -128,20 +128,20 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
 
   // last Layer L procedure differs from hidden layer backpropagation
   for (int i = 0; i < lastLayer->size; i++) {
-    // printf("y act func inp: %f \n", lastLayer->nodes[i]);
+
     x = (lastLayer->weights[i] * input[i]);
+
     x += lastLayer->bias[i];
 
-    lastLayer->actFunc(true, &x, &y);
-    // printf("act func y: %f \n", y);
-    lastLayer->sensitives[i] = (y * (input[i] - lastLayer->nodes[i]));
-    // printf("sensitives: %f \n", lastLayer->sensitives[i]);
 
-    // printf("%f, ", lastLayer->sensitives[i]);
+    lastLayer->actFunc(true, &x, &y);
+
+    lastLayer->nodes[i] = (y * abs(input[i] - lastLayer->nodes[i]));
+
     lastLayer->weights[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
-    // printf("weights: %f \n", lastLayer->weights[i]);
 
     lastLayer->nodes[i] = lastLayer->nodes[i] * lastLayer->weights[i];
+
     lastLayer->nodes[i] += lastLayer->bias[i];
 
     #ifdef DEBUG
@@ -152,6 +152,7 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
   // -1, without last layer
   for(int i = net->nLayer-1; i == 0; i--) {
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
+
       x = (net->nnLayer[i+1]->weights[j] * net->nnLayer[i+1]->nodes[j]);
       x += net->nnLayer[i+1]->bias[j];
 
@@ -217,6 +218,8 @@ int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iteratio
   float *inp = (float*)malloc(nPredict*sizeof(float));
   float error = 0;
   float meanErr = 0;
+
+  printf("mean Err: ");
   for (int i = 0; i < iterations; i++) {
     fp = fopen(pathToFile, "r");
     if (fp == 0) {
@@ -236,12 +239,13 @@ int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iteratio
       inpIt++;
     }
     meanErr = meanErr/nLines;
-    printf("meanErr: %f \n ", meanErr);
+    printf("%f,", meanErr);
     nLines = 0;
     meanErr = 0;
 
     fclose(fp);
   }
+  printf("\n");
   if (line) {
    free(line);
   }
@@ -269,10 +273,12 @@ int main(){
 
   baseLayer *inpLayer = createLayer(nPredict, fullyConnected, reluActFunc);
   baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, reluActFunc);
-  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, noActFunc);
+  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, reluActFunc);
 
   baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
   neuralNet *dnn = createNet(layer, 3);
+
+  printf("asdasyxcyxcycyxcyxcd: %f \n", dnn->nnLayer[2]->weights[1]);
 
   int rc = trainDNN(dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
 
