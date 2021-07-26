@@ -4,4 +4,4 @@ cmake_minimum_required(VERSION 3.10)
 project(simpleNN)
 
 # add the executable
-add_executable(simpleNN dnn.cpp)
+add_executable(simpleNN dnn.c)

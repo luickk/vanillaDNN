@@ -142,32 +142,32 @@ simpleNN/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/build
 .PHONY : simpleNN/fast
 
-dnn.o: dnn.cpp.o
+dnn.o: dnn.c.o
 
 .PHONY : dnn.o
 
 # target to build an object file
-dnn.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.o
-.PHONY : dnn.cpp.o
+dnn.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.o
+.PHONY : dnn.c.o
 
-dnn.i: dnn.cpp.i
+dnn.i: dnn.c.i
 
 .PHONY : dnn.i
 
 # target to preprocess a source file
-dnn.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.i
-.PHONY : dnn.cpp.i
+dnn.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.i
+.PHONY : dnn.c.i
 
-dnn.s: dnn.cpp.s
+dnn.s: dnn.c.s
 
 .PHONY : dnn.s
 
 # target to generate assembly for a file
-dnn.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.cpp.s
-.PHONY : dnn.cpp.s
+dnn.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.s
+.PHONY : dnn.c.s
 
 # Help Target
 help:

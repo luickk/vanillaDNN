@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
 #include <string.h>
 
 // #define DEBUG 1
 
 typedef void (*activationFunc)(bool derivative, float *inp, float *out);
 
-enum layerType {
+typedef enum {
     fullyConnected,
-};
+} layerType;
 
 typedef struct {
   float *bias;
@@ -28,20 +30,20 @@ typedef struct {
 /*
 general NN functions
 */
-void initLayer(float size, layerType type, baseLayer &layer, activationFunc actFunc) {
-  layer.bias = (float*)malloc(size * sizeof(float));
-  layer.weights = (float*)malloc(size * sizeof(float));
-  layer.nodes = (float*)malloc(size * sizeof(float));
-  layer.sensitives = (float*)malloc(size * sizeof(float));
+void initLayer(float size, layerType type, baseLayer *layer, activationFunc actFunc) {
+  layer->bias = (float*)malloc(size * sizeof(float));
+  layer->weights = (float*)malloc(size * sizeof(float));
+  layer->nodes = (float*)malloc(size * sizeof(float));
+  layer->sensitives = (float*)malloc(size * sizeof(float));
 
-  layer.actFunc = actFunc;
-  layer.size = size;
-  layer.type = type;
+  layer->actFunc = actFunc;
+  layer->size = size;
+  layer->type = type;
 }
 
 baseLayer *createLayer(float size, layerType type, activationFunc actFunc) {
   static baseLayer layer;
-  initLayer(size, fullyConnected, layer, actFunc);
+  initLayer(size, fullyConnected, &layer, actFunc);
   return &layer;
 }
 
@@ -56,7 +58,6 @@ void setRandNodes(baseLayer *layer, int size){
   float randN = 0;
   for (int i = 0; i < size; i++) {
     randN = rand() % 10 + 1;
-    // printf("%f \n", randN);
     layer->nodes[i] = randN;
   }
 }
@@ -93,9 +94,9 @@ Layer Operations
 // from https://stackoverflow.com/a/10733861
 void sigmoidActFunc(bool derivative, float *x, float *y){
   if (!derivative) {
-    *y = *x / (1 + abs(*x));
+    *y = *x / (1 + fabsf(*x));
   } else {
-    *y = *x / (1 + abs(*x));
+    *y = *x / (1 + fabsf(*x));
     *y = *y * (1 - *y);
   }
 }
@@ -130,18 +131,14 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
   for (int i = 0; i < lastLayer->size; i++) {
 
     x = (lastLayer->weights[i] * input[i]);
-
     x += lastLayer->bias[i];
-
-
     lastLayer->actFunc(true, &x, &y);
-
-    lastLayer->nodes[i] = (y * abs(input[i] - lastLayer->nodes[i]));
+    lastLayer->nodes[i] = (y * fabsf(input[i] - lastLayer->nodes[i]));
 
     lastLayer->weights[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
+    lastLayer->bias[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
 
     lastLayer->nodes[i] = lastLayer->nodes[i] * lastLayer->weights[i];
-
     lastLayer->nodes[i] += lastLayer->bias[i];
 
     #ifdef DEBUG
@@ -154,12 +151,14 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
 
       x = (net->nnLayer[i+1]->weights[j] * net->nnLayer[i+1]->nodes[j]);
+      // printf("x: %f", x);
       x += net->nnLayer[i+1]->bias[j];
 
       net->nnLayer[i]->actFunc(true, &x, &y);
       net->nnLayer[i]->sensitives[j] = y * net->nnLayer[i+1]->weights[j]*net->nnLayer[i+1]->sensitives[j];
 
       net->nnLayer[i]->weights[j] = (learningRate * net->nnLayer[i]->sensitives[j]) * net->nnLayer[i+1]->nodes[i];
+      net->nnLayer[i]->bias[j] = (learningRate * net->nnLayer[i]->sensitives[j]) * net->nnLayer[i+1]->bias[i];
 
       net->nnLayer[i]->nodes[i] = net->nnLayer[i]->nodes[i] * net->nnLayer[i]->weights[i];
       net->nnLayer[i]->nodes[i] += net->nnLayer[i]->bias[i];
@@ -197,7 +196,7 @@ void feedForward(neuralNet *net, float *input){
 void lsErrorCalc(neuralNet *net, float *input, float *error) {
   *error = 0;
   for (int i = 0; i < net->nnLayer[net->nLayer-1]->size; i++) {
-    *error += 0.5*sqrt(abs(input[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
+    *error += 0.5*sqrt(fabsf(input[i] - net->nnLayer[net->nLayer-1]->nodes[i]));
   }
   #ifdef DEBUG
     printf("%f,", *error);
@@ -277,8 +276,6 @@ int main(){
 
   baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
   neuralNet *dnn = createNet(layer, 3);
-
-  printf("asdasyxcyxcycyxcyxcd: %f \n", dnn->nnLayer[2]->weights[1]);
 
   int rc = trainDNN(dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
 
