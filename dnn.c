@@ -114,12 +114,25 @@ void reluActFunc(bool derivative, float *x, float *y)
   }
 }
 
+void leakyReluActFunc(bool derivative, float *x, float *y)
+{
+  if (!derivative) {
+    *y = fmax(0.1* *x, *x);
+  } else {
+    if (*x > 0) {
+      *y = 1;
+    } else if (*x <= 0){
+      *y = 0;
+    }
+  }
+}
+
 void noActFunc(bool derivative, float *x, float *y)
 {
   *y = *x;
 }
 
-void backpropagate(neuralNet *net, float *input, int learningRate) {
+void backpropagate(neuralNet *net, float *input, float learningRate) {
   float x, y = 0;
   // iterating over every neuron in output layer
   // calculating output (-> backprop init weights) weight
@@ -127,35 +140,46 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
   // net->nLayer-1 = 0..nLastLayer
   baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
 
+  printf("-----------------------------------------\n");
   // last Layer L procedure differs from hidden layer backpropagation
   for (int i = 0; i < lastLayer->size; i++) {
-
     x = (lastLayer->weights[i] * input[i]);
-    // printf("x: %f \n", x);
+    printf("x: %f \n", x);
     x += lastLayer->bias[i];
-    // printf("x+b: %f \n", x);
+    printf("x+b: %f \n", x);
     lastLayer->actFunc(true, &x, &y);
-    // printf("actFunc: %f \n", x);
-    lastLayer->sensitives[i] = (y * (input[i] - lastLayer->nodes[i]));
-    // printf("sensitives: %f \n", lastLayer->nodes[i]);
+    printf("actFunc: %f \n", x);
+    printf("difference: %f - %f = %f \n", lastLayer->nodes[i], input[i], (lastLayer->nodes[i]-input[i]));
+    lastLayer->sensitives[i] = (y * (lastLayer->nodes[i] - input[i]));
+    lastLayer->sensitives[i] = (learningRate*lastLayer->sensitives[i]);
+    printf("sensitives: %f \n", lastLayer->sensitives[i]);
 
-    lastLayer->weights[i] =  lastLayer->nodes[i] * lastLayer->sensitives[i];
-    // printf("weights: %f \n", lastLayer->weights[i]);
-    lastLayer->bias[i] =  lastLayer->bias[i] * lastLayer->sensitives[i];
-    // printf("bias: %f \n", lastLayer->bias[i]);
+    // weight update by sens sub
+    // lastLayer->weights[i] = input[i] - lastLayer->sensitives[i];
+    // weight update by sens mult
+    lastLayer->weights[i] =  lastLayer->sensitives[i] * input[i];
 
-    lastLayer->nodes[i] = lastLayer->nodes[i] * lastLayer->weights[i];
-    // printf("nodes: %f \n", lastLayer->nodes[i]);
-    lastLayer->nodes[i] += lastLayer->bias[i];
-    // printf("nodes+b: %f \n", lastLayer->nodes[i]);
+    printf("weights: %f \n", lastLayer->weights[i]);
+    lastLayer->bias[i] =  lastLayer->sensitives[i] * input[i];
+    printf("bias: %f \n", lastLayer->bias[i]);
+
+    x = lastLayer->nodes[i] * lastLayer->weights[i];
+    x += lastLayer->bias[i];
+    printf("x: %f \n", x);
+    lastLayer->actFunc(false, &x, &y);
+    printf("final act func: %f \n", y);
+
+    lastLayer->nodes[i] = y;
+    printf("-----------\n");
 
     #ifdef DEBUG
       printf("backprop - Last Layer neuron: %i, weight: %.0f \n", i, lastLayer->weights[i]);
     #endif
   }
 
-  // -1, without last layer
+  // -2, without last layer
   for(int i = net->nLayer-2; i >= 0; i--) {
+  printf("-----------------------------------------\n");
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
       x = (net->nnLayer[i]->weights[j] * net->nnLayer[i+1]->nodes[j]);
       printf("x: %f \n", x);
@@ -165,26 +189,33 @@ void backpropagate(neuralNet *net, float *input, int learningRate) {
       net->nnLayer[i]->actFunc(true, &x, &y);
       printf("act func x: %f \n", y);
       net->nnLayer[i]->sensitives[j] = y * net->nnLayer[i+1]->weights[j]*net->nnLayer[i+1]->sensitives[j];
+      net->nnLayer[i]->sensitives[j] = (learningRate * net->nnLayer[i]->sensitives[j]);
       printf("sensitives: %f \n", net->nnLayer[i]->sensitives[j]);
 
-      net->nnLayer[i]->weights[j] = (learningRate * net->nnLayer[i]->sensitives[j]) * net->nnLayer[i+1]->nodes[i];
+      // weight update by sub
+      // net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j]- net->nnLayer[i]->sensitives[j];
+      // weight update by mult
+      net->nnLayer[i]->weights[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[i];
       printf("weight: %f \n", net->nnLayer[i]->weights[j]);
-      net->nnLayer[i]->bias[j] = (learningRate * net->nnLayer[i]->sensitives[j]) * net->nnLayer[i+1]->nodes[i];
+      net->nnLayer[i]->bias[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[i];
       printf("bias: %f \n", net->nnLayer[i]->bias[j]);
 
 
 
       x = net->nnLayer[i]->nodes[i] * net->nnLayer[i]->weights[i];
       x += net->nnLayer[i]->bias[i];
-      net->nnLayer[i]->actFunc(true, &x, &y);
+      printf("x: %f \n", x);
+      net->nnLayer[i]->actFunc(false, &x, &y);
 
       printf("final act func: %f \n", y);
       net->nnLayer[i]->nodes[i] = y;
+      printf("-----------\n");
 
       #ifdef DEBUG
         printf("backprop - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
       #endif
     }
+    printf("-----------------------------------------\n");
   }
 }
 
@@ -214,6 +245,7 @@ void feedForward(neuralNet *net, float *input){
 void lsErrorCalc(neuralNet *net, float *input, float *error) {
   *error = 0;
   for (int i = 0; i < net->nnLayer[net->nLayer-1]->size; i++) {
+    // printf("%f, %f \n", input[i], net->nnLayer[net->nLayer-1]->nodes[i]);
     *error += 0.5*sqrt(input[i] - net->nnLayer[net->nLayer-1]->nodes[i]);
   }
   #ifdef DEBUG
@@ -221,10 +253,21 @@ void lsErrorCalc(neuralNet *net, float *input, float *error) {
   #endif
 }
 
+void printNN(neuralNet *net) {
+  printf("------- nn ------- \n");
+  for(int i = net->nLayer-1; i >= 0; i--) {
+    for (int j = 0; j<net->nnLayer[i]->size; j++) {
+      printf("%f ", net->nnLayer[i]->nodes[j]);
+    }
+    printf("\n");
+  }
+  printf("------- nn ------- \n");
+}
+
 /*
 util functions
 */
-int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iterations, int learningRate) {
+int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iterations, float learningRate) {
   FILE *fp;
   char *line = 0;
   int inpIt = 0;
@@ -282,15 +325,15 @@ int predictDNN(neuralNet *net, float *predictionSeq) {
 int main(){
   int nPredict = 4;
   int iterations = 1;
-  int learningRate = 1;
+  float learningRate = 0.000001;
 
   #ifdef DEBUG
     printf("nPredict: %d \n", nPredict);
   #endif
 
-  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, reluActFunc);
-  baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, reluActFunc);
-  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, reluActFunc);
+  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
+  baseLayer *hiddenLayer1 = createLayer(8, fullyConnected, leakyReluActFunc);
+  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
 
   baseLayer *layer[] = {inpLayer, hiddenLayer1, outpLayer};
   neuralNet *dnn = createNet(layer, 3);
@@ -301,6 +344,13 @@ int main(){
     printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer->nodes[i]);
   }
 
-  float predSeq[] = {2.6, 2.4, 3.9,  1.3, 2.1};
+  // float predSeq[] = {2.6, 2.4, 3.9,  1.3, 2.1};
+  float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};
+  printNN(dnn);
   predictDNN(dnn, predSeq);
+
+  float y,x = 0;
+  x = 50000000000;
+  reluActFunc(false, &x, &y);
+  printf("%f \n", y);
 }
