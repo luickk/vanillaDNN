@@ -137,32 +137,85 @@ void backpropagate(neuralNet *net, float *input, float learningRate) {
   // iterating over every neuron in output layer
   // calculating output (-> backprop init weights) weight
 
-  for(int i = net->nLayer-1; i >= 0; i--) {
-    printf("-----------------------------------------\n");
+  // net->nLayer-1 = 0..nLastLayer
+  baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
+
+  printf("-----------------------------------------\n");
+  // last Layer L procedure differs from hidden layer backpropagation
+  for (int i = 0; i < lastLayer->size; i++) {
+    x = (lastLayer->weights[i] * input[i]);
+    printf("x: %f \n", x);
+    x += lastLayer->bias[i];
+    printf("x+b: %f \n", x);
+    lastLayer->actFunc(true, &x, &y);
+    printf("actFunc: %f \n", x);
+    printf("difference: %f - %f = %f \n", lastLayer->nodes[i], input[i], (lastLayer->nodes[i]-input[i]));
+    lastLayer->sensitives[i] = (y * (lastLayer->nodes[i] - input[i]));
+    lastLayer->sensitives[i] = (learningRate*lastLayer->sensitives[i]);
+    printf("sensitives: %f \n", lastLayer->sensitives[i]);
+
+    // weight update by sens sub
+    // lastLayer->weights[i] = input[i] - lastLayer->sensitives[i];
+    // weight update by sens mult
+    lastLayer->weights[i] =  lastLayer->sensitives[i] * input[i];
+
+    printf("weights: %f \n", lastLayer->weights[i]);
+    lastLayer->bias[i] =  lastLayer->sensitives[i] * input[i];
+    printf("bias: %f \n", lastLayer->bias[i]);
+
+    x = lastLayer->nodes[i] * lastLayer->weights[i];
+    x += lastLayer->bias[i];
+    printf("x: %f \n", x);
+    lastLayer->actFunc(false, &x, &y);
+    printf("final act func: %f \n", y);
+
+    lastLayer->nodes[i] = y;
+    printf("-----------\n");
+
+    #ifdef DEBUG
+      printf("backprop - Last Layer neuron: %i, weight: %.0f \n", i, lastLayer->weights[i]);
+    #endif
+  }
+
+  // -2, without last layer
+  for(int i = net->nLayer-2; i >= 0; i--) {
+  printf("-----------------------------------------\n");
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
-      // output layer
-      if (i == net->nLayer-1) {
-        net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j] - (net->nnLayer[i-1]->nodes[j]*(net->nnLayer[i]->nodes[j] - input[i]));
-        printf("1st layer weights: %f \n", net->nnLayer[i]->weights[i]);
-      // hidden - input layer
-      } else {
-        x = net->nnLayer[i]->nodes[j] * net->nnLayer[i+1]->weights[j];
-        // x += net->nnLayer[i]->bias[i];
-        printf("x: %f \n", x);
-        net->nnLayer[i]->actFunc(false, &x, &y);
+      x = (net->nnLayer[i]->weights[j] * net->nnLayer[i+1]->nodes[j]);
+      printf("x: %f \n", x);
+      x += net->nnLayer[i]->bias[j];
+      printf("x+b: %f \n", x);
 
-        printf("final act func: %f \n", y);
-        net->nnLayer[i]->nodes[j] = y;
+      net->nnLayer[i]->actFunc(true, &x, &y);
+      printf("act func x: %f \n", y);
+      net->nnLayer[i]->sensitives[j] = y * net->nnLayer[i+1]->weights[j]*net->nnLayer[i+1]->sensitives[j];
+      net->nnLayer[i]->sensitives[j] = (learningRate * net->nnLayer[i]->sensitives[j]);
+      printf("sensitives: %f \n", net->nnLayer[i]->sensitives[j]);
 
-        // last layer does not need weight calculation
-        if (i != 0) {
-          net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j] - (net->nnLayer[i-1]->nodes[j]*(net->nnLayer[i]->nodes[j] - input[j])*net->nnLayer[i+1]->weights[j]);
-        }
-      }
+      // weight update by sub
+      // net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j]- net->nnLayer[i]->sensitives[j];
+      // weight update by mult
+      net->nnLayer[i]->weights[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
+      printf("weight: %f \n", net->nnLayer[i]->weights[j]);
+      net->nnLayer[i]->bias[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
+      printf("bias: %f \n", net->nnLayer[i]->bias[j]);
+
+
+
+      x = net->nnLayer[i]->nodes[j] * net->nnLayer[i]->weights[j];
+      x += net->nnLayer[i]->bias[j];
+      printf("x: %f \n", x);
+      net->nnLayer[i]->actFunc(false, &x, &y);
+
+      printf("final act func: %f \n", y);
+      net->nnLayer[i]->nodes[j] = y;
+      printf("-----------\n");
+
       #ifdef DEBUG
         printf("backprop - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
       #endif
     }
+    printf("-----------------------------------------\n");
   }
 }
 
