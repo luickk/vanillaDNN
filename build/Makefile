@@ -142,32 +142,32 @@ simpleNN/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/build
 .PHONY : simpleNN/fast
 
-dnn.o: dnn.c.o
+dnn_jake_bouvrie.o: dnn_jake_bouvrie.c.o
 
-.PHONY : dnn.o
+.PHONY : dnn_jake_bouvrie.o
 
 # target to build an object file
-dnn.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.o
-.PHONY : dnn.c.o
+dnn_jake_bouvrie.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn_jake_bouvrie.c.o
+.PHONY : dnn_jake_bouvrie.c.o
 
-dnn.i: dnn.c.i
+dnn_jake_bouvrie.i: dnn_jake_bouvrie.c.i
 
-.PHONY : dnn.i
+.PHONY : dnn_jake_bouvrie.i
 
 # target to preprocess a source file
-dnn.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.i
-.PHONY : dnn.c.i
+dnn_jake_bouvrie.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn_jake_bouvrie.c.i
+.PHONY : dnn_jake_bouvrie.c.i
 
-dnn.s: dnn.c.s
+dnn_jake_bouvrie.s: dnn_jake_bouvrie.c.s
 
-.PHONY : dnn.s
+.PHONY : dnn_jake_bouvrie.s
 
 # target to generate assembly for a file
-dnn.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn.c.s
-.PHONY : dnn.c.s
+dnn_jake_bouvrie.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/simpleNN.dir/build.make CMakeFiles/simpleNN.dir/dnn_jake_bouvrie.c.s
+.PHONY : dnn_jake_bouvrie.c.s
 
 # Help Target
 help:
@@ -178,9 +178,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... simpleNN"
-	@echo "... dnn.o"
-	@echo "... dnn.i"
-	@echo "... dnn.s"
+	@echo "... dnn_jake_bouvrie.o"
+	@echo "... dnn_jake_bouvrie.i"
+	@echo "... dnn_jake_bouvrie.s"
 .PHONY : help
 
 
