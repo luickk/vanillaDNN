@@ -23,26 +23,25 @@ typedef struct {
 
 typedef struct {
   int nLayer;
-  baseLayer *nnLayer[];
+  baseLayer **nnLayer;
 } neuralNet;
 
 /*
 general NN functions
 */
-void initLayer(float size, layerType type, baseLayer *layer, activationFunc actFunc) {
+void initLayer(int size, layerType type, baseLayer *layer, activationFunc actFunc) {
   layer->bias = (float*)malloc(size * sizeof(float));
   layer->weights = (float*)malloc(size * sizeof(float));
   layer->nodes = (float*)malloc(size * sizeof(float));
-
   layer->actFunc = actFunc;
   layer->size = size;
   layer->type = type;
 }
 
-baseLayer *createLayer(float size, layerType type, activationFunc actFunc) {
-  static baseLayer layer;
-  initLayer(size, fullyConnected, &layer, actFunc);
-  return &layer;
+baseLayer createLayer(int size, layerType type, activationFunc actFunc) {
+  baseLayer *layer = (baseLayer *)malloc(sizeof(baseLayer));
+  initLayer(size, fullyConnected, layer, actFunc);
+  return *layer;
 }
 
 void setRandWeights(baseLayer *layer, int size){
@@ -68,11 +67,11 @@ void setRandBias(baseLayer *layer, int size){
   }
 }
 
-neuralNet *createNet(baseLayer *layer[], int nLayer) {
+neuralNet createNet(baseLayer *layer[], int nLayer) {
   neuralNet *nn = (neuralNet *)malloc(sizeof(baseLayer)*nLayer+sizeof(nLayer));
-  for (int i=0; i<nLayer; ++i) {
-     nn->nnLayer[i]=layer[i];
-  }
+
+  nn->nnLayer = layer;
+
   nn->nLayer = nLayer;
 
   for (int i=0; i<nLayer; ++i) {
@@ -81,13 +80,13 @@ neuralNet *createNet(baseLayer *layer[], int nLayer) {
     setRandBias(nn->nnLayer[i],nn->nnLayer[i]->size);
   }
 
-  return nn;
+  return *nn;
 }
 
 
 void printNN(neuralNet *net) {
   printf("------- nn ------- \n");
-  for(int i = net->nLayer-1; i >= 0; i--) {
+  for(int i = 0; i < net->nLayer; i++) {
     printf("Layer %i: ", i);
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
       printf("%f ", net->nnLayer[i]->nodes[j]);
@@ -149,11 +148,12 @@ void backpropagate(neuralNet *net, float *input, float learningRate) {
   // calculating output (-> backprop init weights) weight
 
   for(int i = net->nLayer-1; i >= 0; i--) {
-    printf("---------------------------------------------------\n");
+    printf("--------------------------------------------------- %i \n", net->nnLayer[i]->size);
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
       printf("-----------------\n");
       // output layer
       if (i == net->nLayer-1) {
+        printf("layer: %i n: %i \n", i, j);
         net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j] - learningRate*(net->nnLayer[i-1]->nodes[j]*(net->nnLayer[i]->nodes[j] - input[i]));
         printf("delta: %f \n", net->nnLayer[i]->nodes[j] - input[i]);
         printf("1st layer weights: %f \n", net->nnLayer[i]->weights[i]);
@@ -275,6 +275,7 @@ int predictDNN(neuralNet *net, float *predictionSeq) {
   return 0;
 }
 
+// TODO -> free memory!!
 int main(){
   int nPredict = 4;
   int iterations = 1;
@@ -284,22 +285,27 @@ int main(){
     printf("nPredict: %d \n", nPredict);
   #endif
 
-  baseLayer *inpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
-  baseLayer *hiddenLayer1 = createLayer(32, fullyConnected, leakyReluActFunc);
-  baseLayer *hiddenLayer2 = createLayer(8, fullyConnected, leakyReluActFunc);
-  baseLayer *outpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
+  baseLayer inpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
+  baseLayer hiddenLayer1 = createLayer(16, fullyConnected, leakyReluActFunc);
+  baseLayer hiddenLayer2 = createLayer(8, fullyConnected, leakyReluActFunc);
+  baseLayer outpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
 
-  baseLayer *layer[] = {inpLayer, hiddenLayer1, hiddenLayer2, outpLayer};
-  neuralNet *dnn = createNet(layer, 4);
+  baseLayer **layer = (baseLayer**)malloc(4*sizeof(baseLayer));
+  layer[0] = &inpLayer;
+  layer[1] = &hiddenLayer1;
+  layer[2] = &hiddenLayer2;
+  layer[3] = &outpLayer;
 
-  int rc = trainDNN(dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
+  neuralNet dnn = createNet(layer, 4);
+
+  int rc = trainDNN(&dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
 
   for (int i = 0; i < nPredict; i++) {
-    printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer->nodes[i]);
+    printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer.nodes[i]);
   }
 
   // float predSeq[] = {2.6, 2.4, 3.9,  1.3, 2.1};
   float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};
-  printNN(dnn);
-  predictDNN(dnn, predSeq);
+  printNN(&dnn);
+  predictDNN(&dnn, predSeq);
 }
