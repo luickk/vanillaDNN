@@ -83,6 +83,16 @@ neuralNet createNet(baseLayer *layer[], int nLayer) {
   return *nn;
 }
 
+void freeNet(neuralNet *net) {
+  for(int i = 0; i < net->nLayer; i++) {
+    free(net->nnLayer[i]->bias);
+    free(net->nnLayer[i]->weights);
+    free(net->nnLayer[i]->nodes);
+    // free(net->nnLayer[i]);
+  }
+  // free(&net);
+}
+
 
 void printNN(neuralNet *net) {
   printf("------- nn ------- \n");
@@ -262,6 +272,7 @@ int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iteratio
   if (line) {
    free(line);
   }
+  free(inp);
   return 0;
 }
 
@@ -308,4 +319,6 @@ int main(){
   float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};
   printNN(&dnn);
   predictDNN(&dnn, predSeq);
+
+  freeNet(&dnn);
 }

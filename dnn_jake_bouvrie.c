@@ -92,9 +92,9 @@ void freeNet(neuralNet *net) {
     free(net->nnLayer[i]->weights);
     free(net->nnLayer[i]->nodes);
     free(net->nnLayer[i]->sensitives);
-    free(net->nnLayer[i]);
+    // free(net->nnLayer[i]);
   }
-  free(&net);
+  // free(&net);
 }
 
 void printNN(neuralNet *net) {
@@ -324,6 +324,7 @@ int trainDNN(neuralNet *net, int nPredict, const char pathToFile[], int iteratio
   if (line) {
    free(line);
   }
+  free(inp);
   return 0;
 }
 
@@ -368,7 +369,7 @@ int main(){
     printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer.nodes[i]);
   }
 
-  // float predSeq[] = {2.6, 2.4, 3.9,  1.3, 2.1};
+  // float predSeq[] = {2.6, 2.4, 3.9, 1.3, 2.1};
   float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};
   printNN(&dnn);
   predictDNN(&dnn, predSeq);
