@@ -86,6 +86,17 @@ neuralNet createNet(baseLayer *layer[], int nLayer) {
   return *nn;
 }
 
+void freeNet(neuralNet *net) {
+  for(int i = 0; i < net->nLayer; i++) {
+    free(net->nnLayer[i]->bias);
+    free(net->nnLayer[i]->weights);
+    free(net->nnLayer[i]->nodes);
+    free(net->nnLayer[i]->sensitives);
+    free(net->nnLayer[i]);
+  }
+  free(&net);
+}
+
 void printNN(neuralNet *net) {
   printf("------- nn ------- \n");
   for(int i = 0; i < net->nLayer; i++) {
@@ -329,6 +340,7 @@ int predictDNN(neuralNet *net, float *predictionSeq) {
 // TODO -> free memory!!
 int main(){
   int nPredict = 4;
+  int nLayer = 0;
   int iterations = 1;
   float learningRate = 0.1;
 
@@ -341,13 +353,14 @@ int main(){
   baseLayer hiddenLayer2 = createLayer(8, fullyConnected, leakyReluActFunc);
   baseLayer outpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
 
-  baseLayer **layer = (baseLayer**)malloc(4*sizeof(baseLayer));
+  nLayer = 4;
+  baseLayer **layer = (baseLayer**)malloc(nLayer*sizeof(baseLayer));
   layer[0] = &inpLayer;
   layer[1] = &hiddenLayer1;
   layer[2] = &hiddenLayer2;
   layer[3] = &outpLayer;
 
-  neuralNet dnn = createNet(layer, 4);
+  neuralNet dnn = createNet(layer, nLayer);
 
   int rc = trainDNN(&dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
 
@@ -359,4 +372,6 @@ int main(){
   float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};
   printNN(&dnn);
   predictDNN(&dnn, predSeq);
+
+  freeNet(&dnn);
 }
