@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-// #define DEBUG 1
+#define DEBUG 1
 
 typedef void (*activationFunc)(bool derivative, float *inp, float *out);
 
@@ -163,85 +163,125 @@ void backpropagate(neuralNet *net, float *input, float learningRate) {
   // net->nLayer-1 = 0..nLastLayer
   baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
 
+  #ifdef DEBUG
   printf("-----------------------------------------\n");
+  #endif
   // last Layer L procedure differs from hidden layer backpropagation
   for (int i = 0; i < lastLayer->size; i++) {
+    #ifdef DEBUG
     printf("-----------\n");
+    #endif
     x = (lastLayer->weights[i] * input[i]);
+    #ifdef DEBUG
     printf("x: %f \n", x);
-    // x += lastLayer->bias[i];
+    #endif
+    x += lastLayer->bias[i];
+    #ifdef DEBUG
     printf("x+b: %f \n", x);
+    #endif
     lastLayer->actFunc(true, &x, &y);
+    #ifdef DEBUG
     printf("actFunc: %f \n", x);
     printf("difference: %f - %f = %f \n", lastLayer->nodes[i], input[i], (lastLayer->nodes[i]-input[i]));
+    #endif
     lastLayer->sensitives[i] = (y * (lastLayer->nodes[i] - input[i]));
     lastLayer->sensitives[i] = (learningRate*lastLayer->sensitives[i]);
+    #ifdef DEBUG
     printf("sensitives: %f \n", lastLayer->sensitives[i]);
+    #endif
 
-    // weight update by sens sub
-    // lastLayer->weights[i] = input[i] - lastLayer->sensitives[i];
-    // weight update by sens mult
     lastLayer->weights[i] =  lastLayer->sensitives[i] * input[i];
 
+    #ifdef DEBUG
     printf("weights: %f \n", lastLayer->weights[i]);
+    #endif
     lastLayer->bias[i] =  lastLayer->sensitives[i] * input[i];
+    #ifdef DEBUG
     printf("bias: %f \n", lastLayer->bias[i]);
+    #endif
 
     x = lastLayer->nodes[i] * lastLayer->weights[i];
-    // x += lastLayer->bias[i];
+    x += lastLayer->bias[i];
+    #ifdef DEBUG
     printf("x: %f \n", x);
+    #endif
     lastLayer->actFunc(false, &x, &y);
+    #ifdef DEBUG
     printf("final act func: %f \n", y);
+    #endif
 
     lastLayer->nodes[i] = y;
-    printf("-----------\n");
-
     #ifdef DEBUG
-      printf("backprop - Last Layer neuron: %i, weight: %.0f \n", i, lastLayer->weights[i]);
+    printf("-----------\n");
     #endif
   }
+  #ifdef DEBUG
   printf("-----------------------------------------\n");
+  #endif
 
   // -2, without last layer
   for(int i = net->nLayer-2; i >= 0; i--) {
+    #ifdef DEBUG
     printf("-----------------------------------------\n");
+    #endif
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
+      #ifdef DEBUG
       printf("-----------\n");
+      #endif
       x = (net->nnLayer[i]->weights[j] * net->nnLayer[i+1]->nodes[j]);
+      #ifdef DEBUG
       printf("x: %f \n", x);
-      // x += net->nnLayer[i]->bias[j];
+      #endif
+      x += net->nnLayer[i]->bias[j];
+      #ifdef DEBUG
       printf("x+b: %f \n", x);
+      #endif
 
       net->nnLayer[i]->actFunc(true, &x, &y);
+      #ifdef DEBUG
       printf("act func x: %f \n", y);
+      #endif
       net->nnLayer[i]->sensitives[j] = y * net->nnLayer[i+1]->weights[j]*net->nnLayer[i+1]->sensitives[j];
       net->nnLayer[i]->sensitives[j] = (learningRate * net->nnLayer[i]->sensitives[j]);
+      #ifdef DEBUG
       printf("sensitives: %f \n", net->nnLayer[i]->sensitives[j]);
+      #endif
 
       net->nnLayer[i]->weights[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
+      #ifdef DEBUG
       printf("weight: %f \n", net->nnLayer[i]->weights[j]);
+      #endif
       net->nnLayer[i]->bias[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
+      #ifdef DEBUG
       printf("bias: %f \n", net->nnLayer[i]->bias[j]);
+      #endif
 
 
 
       x = net->nnLayer[i]->nodes[j] * net->nnLayer[i]->weights[j];
-      // x += net->nnLayer[i]->bias[j];
-
-      printf("x: %f \n", x);
-      net->nnLayer[i]->actFunc(false, &x, &y);
-
-      printf("final act func: %f \n", y);
-      net->nnLayer[i]->nodes[j] = y;
-      printf("-----------\n");
+      x += net->nnLayer[i]->bias[j];
 
       #ifdef DEBUG
-        printf("backprop - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
+      printf("x: %f \n", x);
+      #endif
+      net->nnLayer[i]->actFunc(false, &x, &y);
+
+      #ifdef DEBUG
+      printf("final act func: %f \n", y);
+      #endif
+      net->nnLayer[i]->nodes[j] = y;
+
+      #ifdef DEBUG
+      printf("-----------\n");
       #endif
     }
+    #ifdef DEBUG
     printf("-----------------------------------------\n");
+    #endif
   }
+  #ifdef DEBUG
   printNN(net);
+  #endif
 }
 
 void feedForward(neuralNet *net, float *input){
@@ -257,9 +297,6 @@ void feedForward(neuralNet *net, float *input){
       // iterating over every neuron in layer l-1
       for (int j = 0; j<net->nnLayer[l-1]->size; j++) {
         net->nnLayer[l]->nodes[i] += net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
-        #ifdef DEBUG
-          printf("ff - Layer: %i, neuron: %i, node: %.0f \n", i, j, net->nnLayer[l]->nodes[i]);
-        #endif
       }
       net->nnLayer[l]->nodes[i] += net->nnLayer[l]->bias[i];
       net->nnLayer[l]->actFunc(false, &net->nnLayer[l]->nodes[i], &net->nnLayer[l]->nodes[i]);
@@ -350,8 +387,8 @@ int main(){
   #endif
 
   baseLayer inpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
-  baseLayer hiddenLayer1 = createLayer(16, fullyConnected, leakyReluActFunc);
-  baseLayer hiddenLayer2 = createLayer(8, fullyConnected, leakyReluActFunc);
+  baseLayer hiddenLayer1 = createLayer(8, fullyConnected, leakyReluActFunc);
+  baseLayer hiddenLayer2 = createLayer(4, fullyConnected, leakyReluActFunc);
   baseLayer outpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
 
   nLayer = 4;
@@ -364,10 +401,6 @@ int main(){
   neuralNet dnn = createNet(layer, nLayer);
 
   int rc = trainDNN(&dnn, nPredict, "../data/datasetByLine.csv", iterations, learningRate);
-
-  for (int i = 0; i < nPredict; i++) {
-    printf("Last layer neuron %i, node val: %.2f \n", i, outpLayer.nodes[i]);
-  }
 
   // float predSeq[] = {2.6, 2.4, 3.9, 1.3, 2.1};
   float predSeq[] = {14.6, 18.2, 16.4, 16.6, 14.7};

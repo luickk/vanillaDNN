@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-// #define DEBUG 1
+#define DEBUG 1
 
 typedef void (*activationFunc)(bool derivative, float *inp, float *out);
 
@@ -158,39 +158,62 @@ void backpropagate(neuralNet *net, float *input, float learningRate) {
   // calculating output (-> backprop init weights) weight
 
   for(int i = net->nLayer-1; i >= 0; i--) {
+
+    #ifdef DEBUG
     printf("--------------------------------------------------- %i \n", net->nnLayer[i]->size);
+    #endif
+
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
+      #ifdef DEBUG
       printf("-----------------\n");
+      #endif
+
       // output layer
       if (i == net->nLayer-1) {
+        #ifdef DEBUG
         printf("layer: %i n: %i \n", i, j);
+        #endif
+
         net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j] - learningRate*(net->nnLayer[i-1]->nodes[j]*(net->nnLayer[i]->nodes[j] - input[i]));
+
+        #ifdef DEBUG
         printf("delta: %f \n", net->nnLayer[i]->nodes[j] - input[i]);
         printf("1st layer weights: %f \n", net->nnLayer[i]->weights[i]);
+        #endif
       // hidden - input layer
       } else {
         x = net->nnLayer[i]->nodes[j] * net->nnLayer[i+1]->weights[j];
-        // x += net->nnLayer[i]->bias[i];
+        x += net->nnLayer[i]->bias[i];
+        #ifdef DEBUG
         printf("x: %f \n", x);
+        #endif
         net->nnLayer[i]->actFunc(false, &x, &y);
 
+        #ifdef DEBUG
         printf("final act func: %f \n", y);
+        #endif
         net->nnLayer[i]->nodes[j] = y;
 
         // last layer does not need weight calculation
         if (i != 0) {
           net->nnLayer[i]->weights[j] = net->nnLayer[i]->weights[j] - learningRate*(net->nnLayer[i-1]->nodes[j]*(net->nnLayer[i]->nodes[j] - input[j])*net->nnLayer[i+1]->weights[j]);
+
+          #ifdef DEBUG
           printf("delta: %f \n", net->nnLayer[i]->nodes[j] - input[i]);
+          #endif
         }
       }
       #ifdef DEBUG
-        printf("backprop - Layer: %i, neuron: %i, weight: %.0f \n", i, j, net->nnLayer[i]->weights[j]);
-      #endif
       printf("-----------------\n");
+      #endif
     }
+    #ifdef DEBUG
     printf("---------------------------------------------------\n");
+    #endif
   }
+  #ifdef DEBUG
   printNN(net);
+  #endif
 }
 
 void feedForward(neuralNet *net, float *input){
@@ -206,9 +229,6 @@ void feedForward(neuralNet *net, float *input){
       // iterating over every neuron in layer l-1
       for (int j = 0; j<net->nnLayer[l-1]->size; j++) {
         net->nnLayer[l]->nodes[i] += net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
-        #ifdef DEBUG
-          printf("ff - Layer: %i, neuron: %i, node: %.0f \n", i, j, net->nnLayer[l]->nodes[i]);
-        #endif
       }
       net->nnLayer[l]->nodes[i] += net->nnLayer[l]->bias[i];
       net->nnLayer[l]->actFunc(false, &net->nnLayer[l]->nodes[i], &net->nnLayer[l]->nodes[i]);
