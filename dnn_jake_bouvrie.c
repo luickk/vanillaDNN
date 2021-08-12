@@ -296,7 +296,7 @@ void feedForward(neuralNet *net, float *input){
     for(int i = 0; i<net->nnLayer[l]->size; i++) {
       // iterating over every neuron in layer l-1
       for (int j = 0; j<net->nnLayer[l-1]->size; j++) {
-        net->nnLayer[l]->nodes[i] += net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
+        net->nnLayer[l]->nodes[i] = net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
       }
       net->nnLayer[l]->nodes[i] += net->nnLayer[l]->bias[i];
       net->nnLayer[l]->actFunc(false, &net->nnLayer[l]->nodes[i], &net->nnLayer[l]->nodes[i]);
@@ -380,7 +380,7 @@ int main(){
   int nPredict = 4;
   int nLayer = 0;
   int iterations = 1;
-  float learningRate = 0.1;
+  float learningRate = 0.001;
 
   #ifdef DEBUG
     printf("nPredict: %d \n", nPredict);
