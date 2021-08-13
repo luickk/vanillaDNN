@@ -4,7 +4,13 @@
 #include <math.h>
 #include <string.h>
 
-#define DEBUG 1
+// #define NN_DEBUG 1
+
+#ifdef NN_DEBUG
+# define NN_DEBUG_PRINT(x) printf x
+#else
+# define NN_DEBUG_PRINT(x) do {} while (0)
+#endif
 
 typedef void (*activationFunc)(bool derivative, float *inp, float *out);
 
@@ -43,7 +49,7 @@ void initLayer(float size, layerType type, baseLayer *layer, activationFunc actF
 
 baseLayer createLayer(int size, layerType type, activationFunc actFunc) {
   baseLayer *layer = (baseLayer *)malloc(sizeof(baseLayer));
-  initLayer(size, fullyConnected, layer, actFunc);
+  initLayer(size, type, layer, actFunc);
   return *layer;
 }
 
@@ -163,123 +169,79 @@ void backpropagate(neuralNet *net, float *input, float learningRate) {
   // net->nLayer-1 = 0..nLastLayer
   baseLayer *lastLayer = net->nnLayer[net->nLayer-1];
 
-  #ifdef DEBUG
-  printf("-----------------------------------------\n");
-  #endif
+  NN_DEBUG_PRINT(("-----------------------------------------\n"));
   // last Layer L procedure differs from hidden layer backpropagation
   for (int i = 0; i < lastLayer->size; i++) {
-    #ifdef DEBUG
-    printf("-----------\n");
-    #endif
+    NN_DEBUG_PRINT(("-----------\n"));
+
     x = (lastLayer->weights[i] * input[i]);
-    #ifdef DEBUG
-    printf("x: %f \n", x);
-    #endif
+    NN_DEBUG_PRINT(("x: %f \n", x));
     x += lastLayer->bias[i];
-    #ifdef DEBUG
-    printf("x+b: %f \n", x);
-    #endif
+    NN_DEBUG_PRINT(("x+b: %f \n", x));
+
     lastLayer->actFunc(true, &x, &y);
-    #ifdef DEBUG
-    printf("actFunc: %f \n", x);
-    printf("difference: %f - %f = %f \n", lastLayer->nodes[i], input[i], (lastLayer->nodes[i]-input[i]));
-    #endif
+    NN_DEBUG_PRINT(("actFunc: %f \n", x));
+    NN_DEBUG_PRINT(("difference: %f - %f = %f \n", lastLayer->nodes[i], input[i], (lastLayer->nodes[i]-input[i])));
+
     lastLayer->sensitives[i] = (y * (lastLayer->nodes[i] - input[i]));
     lastLayer->sensitives[i] = (learningRate*lastLayer->sensitives[i]);
-    #ifdef DEBUG
-    printf("sensitives: %f \n", lastLayer->sensitives[i]);
-    #endif
+    NN_DEBUG_PRINT(("sensitives: %f \n", lastLayer->sensitives[i]));
+
 
     lastLayer->weights[i] =  lastLayer->sensitives[i] * input[i];
+    NN_DEBUG_PRINT(("weights: %f \n", lastLayer->weights[i]));
 
-    #ifdef DEBUG
-    printf("weights: %f \n", lastLayer->weights[i]);
-    #endif
     lastLayer->bias[i] =  lastLayer->sensitives[i] * input[i];
-    #ifdef DEBUG
-    printf("bias: %f \n", lastLayer->bias[i]);
-    #endif
+    NN_DEBUG_PRINT(("bias: %f \n", lastLayer->bias[i]));
 
     x = lastLayer->nodes[i] * lastLayer->weights[i];
     x += lastLayer->bias[i];
-    #ifdef DEBUG
-    printf("x: %f \n", x);
-    #endif
-    lastLayer->actFunc(false, &x, &y);
-    #ifdef DEBUG
-    printf("final act func: %f \n", y);
-    #endif
 
+    NN_DEBUG_PRINT(("x: %f \n", x));
+    lastLayer->actFunc(false, &x, &y);
+    NN_DEBUG_PRINT(("final act func: %f \n", y));
     lastLayer->nodes[i] = y;
-    #ifdef DEBUG
-    printf("-----------\n");
-    #endif
+    NN_DEBUG_PRINT(("-----------\n"));
   }
-  #ifdef DEBUG
-  printf("-----------------------------------------\n");
-  #endif
+  NN_DEBUG_PRINT(("-----------------------------------------\n"));
 
   // -2, without last layer
   for(int i = net->nLayer-2; i >= 0; i--) {
-    #ifdef DEBUG
-    printf("-----------------------------------------\n");
-    #endif
+    NN_DEBUG_PRINT(("-----------------------------------------\n"));
     for (int j = 0; j<net->nnLayer[i]->size; j++) {
-      #ifdef DEBUG
-      printf("-----------\n");
-      #endif
+      NN_DEBUG_PRINT(("-----------\n"));
       x = (net->nnLayer[i]->weights[j] * net->nnLayer[i+1]->nodes[j]);
-      #ifdef DEBUG
-      printf("x: %f \n", x);
-      #endif
+      NN_DEBUG_PRINT(("x: %f \n", x));
+
       x += net->nnLayer[i]->bias[j];
-      #ifdef DEBUG
-      printf("x+b: %f \n", x);
-      #endif
+      NN_DEBUG_PRINT(("x+b: %f \n", x));
 
       net->nnLayer[i]->actFunc(true, &x, &y);
-      #ifdef DEBUG
-      printf("act func x: %f \n", y);
-      #endif
+      NN_DEBUG_PRINT(("act func x: %f \n", y));
+
       net->nnLayer[i]->sensitives[j] = y * net->nnLayer[i+1]->weights[j]*net->nnLayer[i+1]->sensitives[j];
       net->nnLayer[i]->sensitives[j] = (learningRate * net->nnLayer[i]->sensitives[j]);
-      #ifdef DEBUG
-      printf("sensitives: %f \n", net->nnLayer[i]->sensitives[j]);
-      #endif
+      NN_DEBUG_PRINT(("sensitives: %f \n", net->nnLayer[i]->sensitives[j]));
 
       net->nnLayer[i]->weights[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
-      #ifdef DEBUG
-      printf("weight: %f \n", net->nnLayer[i]->weights[j]);
-      #endif
+      NN_DEBUG_PRINT(("weight: %f \n", net->nnLayer[i]->weights[j]));
+
       net->nnLayer[i]->bias[j] = net->nnLayer[i]->sensitives[j] * net->nnLayer[i+1]->nodes[j];
-      #ifdef DEBUG
-      printf("bias: %f \n", net->nnLayer[i]->bias[j]);
-      #endif
-
-
+      NN_DEBUG_PRINT(("bias: %f \n", net->nnLayer[i]->bias[j]));
 
       x = net->nnLayer[i]->nodes[j] * net->nnLayer[i]->weights[j];
       x += net->nnLayer[i]->bias[j];
+      NN_DEBUG_PRINT(("x: %f \n", x));
 
-      #ifdef DEBUG
-      printf("x: %f \n", x);
-      #endif
       net->nnLayer[i]->actFunc(false, &x, &y);
-
-      #ifdef DEBUG
-      printf("final act func: %f \n", y);
-      #endif
+      NN_DEBUG_PRINT(("final act func: %f \n", y));
       net->nnLayer[i]->nodes[j] = y;
 
-      #ifdef DEBUG
-      printf("-----------\n");
-      #endif
+      NN_DEBUG_PRINT(("-----------\n"));
     }
-    #ifdef DEBUG
-    printf("-----------------------------------------\n");
-    #endif
+    NN_DEBUG_PRINT(("-----------------------------------------\n"));
   }
-  #ifdef DEBUG
+  #ifdef NN_DEBUG
   printNN(net);
   #endif
 }
@@ -289,17 +251,18 @@ void feedForward(neuralNet *net, float *input){
   for (int i = 0; i < net->nnLayer[0]->size; i++) {
     net->nnLayer[0]->nodes[i] = input[i];
   }
-
   // iterating over every layer
   for(int l = 1; l < net->nLayer; l++) {
-    // iterating over every neuron in layer l
-    for(int i = 0; i<net->nnLayer[l]->size; i++) {
-      // iterating over every neuron in layer l-1
-      for (int j = 0; j<net->nnLayer[l-1]->size; j++) {
-        net->nnLayer[l]->nodes[i] = net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
+    if (net->nnLayer[l]->type == fullyConnected) {
+      // iterating over every neuron in layer l
+      for(int i = 0; i<net->nnLayer[l]->size; i++) {
+        // iterating over every neuron in layer l-1
+        for (int j = 0; j<net->nnLayer[l-1]->size; j++) {
+          net->nnLayer[l]->nodes[i] = net->nnLayer[l]->weights[i] * net->nnLayer[l-1]->nodes[j];
+        }
+        net->nnLayer[l]->nodes[i] += net->nnLayer[l]->bias[i];
+        net->nnLayer[l]->actFunc(false, &net->nnLayer[l]->nodes[i], &net->nnLayer[l]->nodes[i]);
       }
-      net->nnLayer[l]->nodes[i] += net->nnLayer[l]->bias[i];
-      net->nnLayer[l]->actFunc(false, &net->nnLayer[l]->nodes[i], &net->nnLayer[l]->nodes[i]);
     }
   }
 }
@@ -310,9 +273,7 @@ void lsErrorCalc(neuralNet *net, float *input, float *error) {
     // printf("%f, %f \n", input[i], net->nnLayer[net->nLayer-1]->nodes[i]);
     *error += 0.5*sqrt(input[i] - net->nnLayer[net->nLayer-1]->nodes[i]);
   }
-  #ifdef DEBUG
-    printf("%f,", *error);
-  #endif
+  NN_DEBUG_PRINT(("%f,", *error));
 }
 
 
@@ -382,9 +343,7 @@ int main(){
   int iterations = 1;
   float learningRate = 0.001;
 
-  #ifdef DEBUG
-    printf("nPredict: %d \n", nPredict);
-  #endif
+  NN_DEBUG_PRINT(("nPredict: %d \n", nPredict));
 
   baseLayer inpLayer = createLayer(nPredict, fullyConnected, leakyReluActFunc);
   baseLayer hiddenLayer1 = createLayer(8, fullyConnected, leakyReluActFunc);
