@@ -5,7 +5,7 @@ The code itself is not meant to be used as a library but could(if required) easi
 
 ## DNN by Jake Bouvrie
 
-The `dnn_jake_bouvrie.cpp` contains functions to build a simple neural net with a means Square error reduction and interchangeable activation functions. To test the NN it predicts n numbers from a training dataset.
+The `dnn_jake_bouvrie.cpp` contains functions to build a simple neural net with a means Square error reduction and interchangeable activation functions. To test the NN, trained from a training dataset, it predicts a sequence of n numbers.
 
 The mathematical implementation can be found [here](http://www.cogprints.org/5869/1/cnn_tutorial.pdf) and was written by Jake Bouvrie.
 
